@@ -5,14 +5,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncBot.Core", "SyncBot.Cor
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{99BE708C-365B-485F-867B-80D239430566}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{99BE708C-365B-485F-867B-80D239430566}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{99BE708C-365B-485F-867B-80D239430566}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{99BE708C-365B-485F-867B-80D239430566}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99BE708C-365B-485F-867B-80D239430566}.Debug|x86.ActiveCfg = Debug|x86
+		{99BE708C-365B-485F-867B-80D239430566}.Debug|x86.Build.0 = Debug|x86
+		{99BE708C-365B-485F-867B-80D239430566}.Release|x86.ActiveCfg = Release|x86
+		{99BE708C-365B-485F-867B-80D239430566}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

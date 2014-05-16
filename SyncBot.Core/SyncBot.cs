@@ -29,38 +29,41 @@ namespace SyncBot.Core
 			this.numThreads = numThreads;
 		}
 
-		public Task Sync(string path, int changelist)
+		public Task Sync(string path)
 		{
 			return Task.Factory.StartNew(() => 
 				{
-					GatherFiles(path, changelist);
-					SyncFiles(changelist);
+					GatherFiles(path);
+					SyncFiles();
 				});
 		}
 
-		private void GatherFiles(string path, int changelist)
+		private void GatherFiles(string path)
 		{
 			long totalFileSize = 0;
 
 			using(var p4 = CreatePerforceConnection())
 			{
-				var results = p4.Run("sync", GetSyncArgs(path, changelist, true, false));
-				filesToSync = new ConcurrentQueue<DepotFile>(results.Records.Select(r => new DepotFile() { Name = r.Fields["depotFile"], Size = long.Parse(r.Fields["fileSize"]) }).ToList());
-
+				var results = p4.Run("sync", GetSyncArgs(path, true, false));
 				if(results.Records.Length > 0)
-					totalFileSize = long.Parse(results.Records[0].Fields["totalFileSize"]);
-
-				// Look for any files that need to be resolved, as they will not show up in the records, but we still need to sync them
-				foreach(var message in results.Messages)
 				{
-					if(message.Contains("must resolve"))
-					{
-						// Extract the depot file name
-						string fileName = message.Remove(message.IndexOf(" - must resolve"));
+					totalFileSize = long.Parse(results.Records[0].Fields["totalFileSize"]);
+					long change = long.Parse(results.Records[0].Fields["change"]);
 
-						// For now we'll just ignore the size of files that need to be resolved... in practice there probably won't be that
-						// many, and they're most likely going to be code files, which are small
-						filesToSync.Enqueue(new DepotFile() { Name = fileName, Size = 0 });
+					filesToSync = new ConcurrentQueue<DepotFile>(results.Records.Select(r => new DepotFile() { Name = r.Fields["depotFile"], Size = long.Parse(r.Fields["fileSize"]), Change = change }).ToList());
+					
+					// Look for any files that need to be resolved, as they will not show up in the records, but we still need to sync them
+					foreach(var message in results.Messages)
+					{
+						if(message.Contains("must resolve"))
+						{
+							// Extract the depot file name
+							string fileName = message.Remove(message.IndexOf(" - must resolve"));
+
+							// For now we'll just ignore the size of files that need to be resolved... in practice there probably won't be that
+							// many, and they're most likely going to be code files, which are small
+							filesToSync.Enqueue(new DepotFile() { Name = fileName, Size = 0, Change = change });
+						}
 					}
 				}
 			}
@@ -68,9 +71,10 @@ namespace SyncBot.Core
 			OnGathered(filesToSync.Count, totalFileSize);
 		}
 
-		private void SyncFiles(int changelist)
+		private void SyncFiles()
 		{
-			Task[] tasks = new Task[numThreads];
+			int numTasks = Math.Min(numThreads, filesToSync.Count);
+			Task[] tasks = new Task[numTasks];
 
 			for(int i = 0; i < tasks.Length; i++)
 			{
@@ -86,7 +90,8 @@ namespace SyncBot.Core
 
 								try
 								{
-									p4.Run("sync", GetSyncArgs(file.Name, changelist, false, false));
+									string[] args = GetSyncArgs(file.Name, file.Change, false, false);
+									p4.Run("sync", args);
 									OnSynced(current, file.Name, file.Size);
 								}
 								catch(Exception ex)
@@ -113,7 +118,22 @@ namespace SyncBot.Core
 			return p4;
 		}
 
-		private string[] GetSyncArgs(string path, int changelist, bool preview, bool force)
+		private string[] GetSyncArgs(string path, bool preview, bool force)
+		{
+			var args = new List<string>();
+
+			if(preview)
+				args.Add("-n");
+
+			if(force)
+				args.Add("-f");
+
+			args.Add(string.Format("{0}", path));
+
+			return args.ToArray();
+		}
+
+		private string[] GetSyncArgs(string path, long changelist, bool preview, bool force)
 		{
 			var args = new List<string>();
 
@@ -188,6 +208,7 @@ namespace SyncBot.Core
 	{
 		public string Name { get; set; }
 		public long Size { get; set; }
+		public long Change { get; set; }
 	}
 
 	public class GatherEventArgs : EventArgs

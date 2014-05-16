@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncBot.Core", "SyncBot.Core\SyncBot.Core.csproj", "{99BE708C-365B-485F-867B-80D239430566}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncBotCLI", "SyncBotCLI\SyncBotCLI.csproj", "{5F72C215-464F-4918-B785-0EFA71E5204C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -13,6 +15,10 @@ Global
 		{99BE708C-365B-485F-867B-80D239430566}.Debug|x86.Build.0 = Debug|x86
 		{99BE708C-365B-485F-867B-80D239430566}.Release|x86.ActiveCfg = Release|x86
 		{99BE708C-365B-485F-867B-80D239430566}.Release|x86.Build.0 = Release|x86
+		{5F72C215-464F-4918-B785-0EFA71E5204C}.Debug|x86.ActiveCfg = Debug|x86
+		{5F72C215-464F-4918-B785-0EFA71E5204C}.Debug|x86.Build.0 = Debug|x86
+		{5F72C215-464F-4918-B785-0EFA71E5204C}.Release|x86.ActiveCfg = Release|x86
+		{5F72C215-464F-4918-B785-0EFA71E5204C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

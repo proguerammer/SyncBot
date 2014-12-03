@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,9 +32,16 @@ namespace SyncBotCLI
 			worker.Error += OnError;
 
 			worker.InitializePerforce(user, password, workspace, server);
-			Task task = worker.Sync(path);
 
-			task.Wait();
+            try
+            {
+                Task task = worker.Sync(path);
+                task.Wait();
+            }
+            catch (AggregateException ae)
+            {
+                Console.WriteLine(ae.InnerException.Message);
+            }
 
 			Console.WriteLine("Finished.");
 		}

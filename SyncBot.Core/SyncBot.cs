@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,34 +41,43 @@ namespace SyncBot.Core
 		private void GatherFiles(string path)
 		{
 			long totalFileSize = 0;
+            // IGS_RG: Initialize filesToSync to prevent null exception when failing PerforceConnection or returning 0 records (nothing to sync)
+            filesToSync = new ConcurrentQueue<DepotFile>();
 
 			using(var p4 = CreatePerforceConnection())
 			{
-				var results = p4.Run("sync", GetSyncArgs(path, true, false));
-				if(results.Records.Length > 0)
-				{
-					totalFileSize = long.Parse(results.Records[0].Fields["totalFileSize"]);
-					long change = long.Parse(results.Records[0].Fields["change"]);
+                try
+                {
+                    var results = p4.Run("sync", GetSyncArgs(path, true, false));
+				    if(results.Records.Length > 0)
+				    {
+					    totalFileSize = long.Parse(results.Records[0].Fields["totalFileSize"]);
+					    long change = long.Parse(results.Records[0].Fields["change"]);
 
-					filesToSync = new ConcurrentQueue<DepotFile>(results.Records.Select(r => new DepotFile() { Name = r.Fields["depotFile"], Size = long.Parse(r.Fields["fileSize"]), Change = change }).ToList());
+					    filesToSync = new ConcurrentQueue<DepotFile>(results.Records.Select(r => new DepotFile() { Name = r.Fields["depotFile"], Size = long.Parse(r.Fields["fileSize"]), Change = change }).ToList());
 					
-					// Look for any files that need to be resolved, as they will not show up in the records, but we still need to sync them
-					foreach(var message in results.Messages)
-					{
-						if(message.Contains("must resolve"))
-						{
-							// Extract the depot file name
-							string fileName = message.Remove(message.IndexOf(" - must resolve"));
+					    // Look for any files that need to be resolved, as they will not show up in the records, but we still need to sync them
+					    foreach(var message in results.Messages)
+					    {
+						    if(message.Contains("must resolve"))
+						    {
+							    // Extract the depot file name
+							    string fileName = message.Remove(message.IndexOf(" - must resolve"));
 
-							// For now we'll just ignore the size of files that need to be resolved... in practice there probably won't be that
-							// many, and they're most likely going to be code files, which are small
-							filesToSync.Enqueue(new DepotFile() { Name = fileName, Size = 0, Change = change });
-						}
-					}
-				}
+							    // For now we'll just ignore the size of files that need to be resolved... in practice there probably won't be that
+							    // many, and they're most likely going to be code files, which are small
+							    filesToSync.Enqueue(new DepotFile() { Name = fileName, Size = 0, Change = change });
+						    }
+					    }
+				    }
+                }
+                catch(Exception ex)
+                {
+                    OnError(ex.Message);
+                }
 			}
 
-			OnGathered(filesToSync.Count, totalFileSize);
+            OnGathered(filesToSync.Count, totalFileSize);   
 		}
 
 		private void SyncFiles()
@@ -111,9 +120,7 @@ namespace SyncBot.Core
 			var p4 = new P4Connection() { User = user, Password = password, Client = workspace, Port = server };
 
 			p4.Connect();
-
-			if(password != "")
-				p4.Login(password);
+            p4.Login(password);
 
 			return p4;
 		}
